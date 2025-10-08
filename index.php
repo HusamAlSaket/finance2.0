@@ -118,13 +118,16 @@
                 
                 <div class="form-group">
                     <label>التصنيف</label>
-                    <div class="year-select">
-                        <select id="classification">
-                            <option value="">-- اختر --</option>
-                        </select>
-                        <span class="year-label">سنة الميزانية</span>
-                        <span class="year-value">سنة 2023</span>
-                    </div>
+                    <select id="classification">
+                        <option value="">-- اختر --</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>سنة الميزانية</label>
+                    <select id="year_selector" disabled>
+                        <option value="">-- اختر السنة --</option>
+                    </select>
                 </div>
             </div>
         </section>
