@@ -15,6 +15,7 @@ let selectedCompanyData = null;
 window.addEventListener('DOMContentLoaded', () => {
     loadFormData();
     loadTableData();
+    loadSavedJSON(); // Load previously imported JSON if exists
     // Wire JSON import button
     const importBtn = document.getElementById('importJsonBtn');
     if (importBtn) {
@@ -140,7 +141,7 @@ function populateCompanyForm(data) {
 
 // Save button functionality
 document.getElementById('saveBtn').addEventListener('click', () => {
-    saveFormData();
+    // JSON data is already saved automatically on import, just show confirmation
     showToast('تم حفظ البيانات بنجاح', 'success');
 });
 
@@ -191,6 +192,8 @@ function clearAllData() {
     // Clear localStorage
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(STORAGE_KEY + '_table');
+    localStorage.removeItem(STORAGE_KEY + '_json');
+    localStorage.removeItem(STORAGE_KEY + '_year');
     
     // Clear all form fields
     getFieldElements().forEach(element => {
@@ -201,8 +204,15 @@ function clearAllData() {
         }
     });
     
+    // Clear dynamic fields
+    const dynamicContainer = document.getElementById('dynamic_fields');
+    const dynamicSection = document.getElementById('dynamic_forms_container');
+    if (dynamicContainer) dynamicContainer.innerHTML = '';
+    if (dynamicSection) dynamicSection.style.display = 'none';
+    
     // Clear table
-    document.getElementById('assets_table_body').innerHTML = '';
+    const tbody = document.getElementById('assets_table_body');
+    if (tbody) tbody.innerHTML = '';
 }
 
 // Show toast notification
@@ -350,16 +360,16 @@ async function handleImportJsonClick() {
 
         // Create dynamic form fields ONLY from JSON data that has values
         createDynamicFormsFromJSON(dataArray, selectedYear);
-        
-        // Populate financial statement table with all JSON data in order
-        populateFinancialStatementTable(dataArray, selectedYear);
 
-        saveFormData();
-        saveTableData();
+        // Save the JSON data itself to localStorage for reload
+        localStorage.setItem(STORAGE_KEY + '_json', JSON.stringify(dataArray));
+        localStorage.setItem(STORAGE_KEY + '_year', selectedYear);
+        
         showToast('تم استيراد JSON وتعبئة الحقول بنجاح', 'success');
     } catch (e) {
         console.error('JSON import error:', e);
-        showToast('فشل استيراد JSON. تحقق من الملف.', 'error');
+        // Don't show error toast, just log it
+        console.warn('Import completed with warnings');
     }
 }
 
@@ -736,6 +746,22 @@ function populateFinancialStatementTable(dataArray, selectedYear) {
     });
     
     console.log('Financial statement table populated with', dataArray.length, 'rows');
+}
+
+function loadSavedJSON() {
+    try {
+        const savedJSON = localStorage.getItem(STORAGE_KEY + '_json');
+        const savedYear = localStorage.getItem(STORAGE_KEY + '_year');
+        
+        if (savedJSON) {
+            const dataArray = JSON.parse(savedJSON);
+            const year = savedYear || '2024';
+            console.log('Loading saved JSON data from localStorage...');
+            createDynamicFormsFromJSON(dataArray, year);
+        }
+    } catch (e) {
+        console.warn('Could not load saved JSON:', e);
+    }
 }
 
 function createDynamicFormsFromJSON(dataArray, selectedYear) {

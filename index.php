@@ -137,30 +137,12 @@
             </div>
         </section>
 
-        <!-- قائمة المركز المالي (Financial Statement from JSON) -->
-        <section class="form-section">
-            <h2 class="section-title">قائمة المركز المالي</h2>
-            <div class="table-responsive">
-                <table class="data-table" style="width:100%;">
-                    <thead>
-                        <tr>
-                            <th style="width:50%;">البند</th>
-                            <th style="width:15%;">إيضاح</th>
-                            <th style="width:17.5%;">2023</th>
-                            <th style="width:17.5%;">2024</th>
-                        </tr>
-                    </thead>
-                    <tbody id="financial_statement_table">
-                        <!-- JSON data will be populated here -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
+
         
         
 
         <!-- Contact Information Footer -->
-        <div class="contact-info">
+        <!-- <div class="contact-info">
             <p>تم تطوير بوابة الخدمات الالكترونية الخاصة بادخال ميزانيات الشركات بواسط</p>
             <div class="contact-details">
                 <p><strong>معلومات الاتصال</strong></p>
@@ -168,7 +150,7 @@
                 <p><strong>العنوان:</strong> عمان - الشميساني - شارع الملكة نور</p>
                 <p><strong>ساعات العمل:</strong> من الأحد إلى الخميس من الساعة 8:30 إلى الساعة 3:30</p>
             </div>
-        </div>
+        </div> -->
         
         <!-- Action Buttons -->
         <div class="action-buttons">
