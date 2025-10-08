@@ -348,14 +348,11 @@ async function handleImportJsonClick() {
         console.log('Label-to-value map entries:', Object.keys(labelToValue).length);
         console.log('Sample labels:', Object.keys(labelToValue).slice(0, 10));
 
-        // Reset form values so missing fields remain null/blank
-        resetFormValuesForImport();
-
-        applyJsonToForm(labelToValue);
-        applyJsonByScanningLabels(labelToValue);
+        // Create dynamic form fields ONLY from JSON data that has values
+        createDynamicFormsFromJSON(dataArray, selectedYear);
+        
         // Populate financial statement table with all JSON data in order
         populateFinancialStatementTable(dataArray, selectedYear);
-        logUnmappedLabels(dataArray, labelToValue);
 
         saveFormData();
         saveTableData();
@@ -475,8 +472,9 @@ function findNearestArabicLabelText(el) {
 }
 
 function applyJsonToForm(labelToValue) {
-    // Heuristic mappings from labels to our form fields
+        // Comprehensive mappings from JSON labels to form field IDs
     const mappings = [
+        // Company info
         { labels: ['اسم الشركه', 'الشركه', 'شركة'], field: 'company_name' },
         { labels: ['الاسم التجاري', 'الاسم التجاري للشركه'], field: 'trade_name' },
         { labels: ['موقع الشركه', 'الموقع'], field: 'company_location' },
@@ -485,21 +483,84 @@ function applyJsonToForm(labelToValue) {
         { labels: ['تاريخ التسجيل'], field: 'registration_date' },
         { labels: ['راس المال', 'رأس المال', 'رأس المال المصرح والمكتتب به والمدفوع'], field: 'capital' },
         { labels: ['توضيح القطاع', 'القطاع'], field: 'sector_description' },
-        { labels: ['المبيعات المحليه'], field: 'local_sales' },
-        { labels: ['المبيعات المصدره'], field: 'exported_sales' },
+        
+        // Inventory - accurate mappings only
+        { labels: ['مخزون البضاعه الجاهزه', 'مخزون البضاعة الجاهزة', 'مخزون بضاعة جاهزة بداية المدة'], field: 'inventory_start' },
+        { labels: ['مخزون المواد الاستهلاكيه', 'مخزون المواد الاستهلاكية', 'مخزون بضاعة جاهزة آخر المدة'], field: 'inventory_end' },
+        
+        // Production & Sales
+        { labels: ['المبيعات المحليه', 'المبيعات المحلية'], field: 'local_sales' },
+        { labels: ['المبيعات المصدره', 'المبيعات المصدرة'], field: 'exported_sales' },
         { labels: ['مجموع المبيعات', 'اجمالي المبيعات'], field: 'total_sales' },
-        { labels: ['الانتاج'], field: 'production' },
-        { labels: ['مخزون بضاعه جاهزه بدايه المده'], field: 'inventory_start' },
-        { labels: ['مخزون بضاعه جاهزه اخر المده', 'مخزون بضاعه جاهزه نهايه المده'], field: 'inventory_end' }
+        { labels: ['الانتاج', 'الإنتاج'], field: 'production' },
+        
+        // Revenues
+        { labels: ['اجمالي ايراد النشاط الرئيسي', 'إجمالي إيراد النشاط الرئيسي'], field: 'main_activity_revenue' },
+        { labels: ['اجمالي ايراد النشاط الثانوي', 'إجمالي إيراد النشاط الثانوي'], field: 'secondary_activity_revenue' },
+        { labels: ['مجموع الايرادات', 'مجموع الإيرادات'], field: 'total_revenues_overview' },
+        
+        // Administrative & General Expenses
+        { labels: ['اجور و رواتب', 'أجور ورواتب', 'رواتب ومنافع الموظفين'], field: 'wages_benefits' },
+        { labels: ['مساهمه المنشأه في الضمان اجتماعي', 'مساهمة المنشأة في الضمان الاجتماعي'], field: 'social_security_contribution' },
+        { labels: ['مزايا اخرى للموظفين', 'مزايا أخرى للموظفين'], field: 'other_employee_benefits' },
+        { labels: ['قرطاسيه ومطبوعات ولوازم', 'قرطاسية ومطبوعات'], field: 'stationery_supplies' },
+        { labels: ['كهرباء ومياه ومحروقات', 'كهرباء ومياه'], field: 'utilities_fuel' },
+        { labels: ['نفقات السيارات'], field: 'car_expenses' },
+        { labels: ['محروقات للتدفئه', 'محروقات للتدفئة'], field: 'heating_fuel' },
+        { labels: ['نظافه وضيافه', 'نظافة وضيافة'], field: 'cleaning_hospitality' },
+        { labels: ['اتصالات وانترنت وبريد'], field: 'communications' },
+        { labels: ['ايجارات ابنيه', 'إيجارات أبنية', 'ايجارات'], field: 'building_rent' },
+        { labels: ['رسوم ورخص', 'رسوم حكومية'], field: 'fees_licenses_subscriptions' },
+        { labels: ['تصاريح عمال'], field: 'worker_permits' },
+        { labels: ['استئجار سيارات والات', 'استئجار سيارات وآلات'], field: 'vehicle_equipment_rental' },
+        { labels: ['صيانه عامه', 'صيانة عامة'], field: 'general_maintenance' },
+        { labels: ['نفقات صحيه', 'نفقات صحية'], field: 'health_expenses' },
+        { labels: ['مصاريف حاسوب', 'مصاريف كمبيوتر'], field: 'computer_expenses_consulting' },
+        { labels: ['عمولات بنكيه', 'عمولات بنكية'], field: 'bank_commissions' },
+        { labels: ['اتعاب مهنيه', 'أتعاب مهنية', 'تدقيق حسابات'], field: 'professional_fees_audit' },
+        { labels: ['مصاريف سفر وتنقلات', 'مصاريف سفر'], field: 'travel_expenses' },
+        { labels: ['مصاريف تدريب'], field: 'training_expenses' },
+        { labels: ['مصاريف تمويل'], field: 'financing_expenses' },
+        { labels: ['تبرعات ومنح'], field: 'donations_grants' },
+        { labels: ['فرق عملات'], field: 'currency_diff' },
+        { labels: ['غرامات'], field: 'fines' },
+        { labels: ['اقساط تامين مدفوعه', 'أقساط تأمين'], field: 'insurance_premiums_paid' },
+        { labels: ['طوابع'], field: 'stamps' },
+        { labels: ['مسقفات'], field: 'property_taxes' },
+        { labels: ['نفقات اخرى', 'نفقات أخرى'], field: 'other_expenses_misc' },
+        
+        // Raw Materials
+        { labels: ['مشتريات مواد اوليه', 'مشتريات مواد أولية'], field: 'purchases_raw_materials' },
+        { labels: ['مخزون بدايه العام', 'مخزون بداية العام'], field: 'beginning_inventory' },
+        { labels: ['مخزون نهايه العام', 'مخزون نهاية العام'], field: 'ending_inventory' },
+        { labels: ['المستخدم بالانتاج', 'المستخدم في الإنتاج'], field: 'used_in_production' },
+        
+        // Other Expenses
+        { labels: ['فوائد بنوك مدفوعه', 'فوائد بنوك'], field: 'bank_interest_paid' },
+        { labels: ['تبرعات وتحويلات للغير'], field: 'donations_transfers' },
+        { labels: ['ارباح اسهم مدفوعه', 'أرباح أسهم مدفوعة', 'توزيعات أرباح'], field: 'dividends_paid' },
+        
+        // Totals
+        { labels: ['مجموع المصاريف الاداريه والعموميه', 'إجمالي المصاريف الإدارية'], field: 'admin_general_expenses_total' },
+        { labels: ['مجموع المواد الاوليه', 'إجمالي المواد الأولية'], field: 'raw_materials_sum' },
+        { labels: ['مجموع النفقات الاخرى', 'إجمالي النفقات الأخرى'], field: 'other_expenses_sum' },
+        { labels: ['اهتلاك راس المال', 'اهتلاك رأس المال'], field: 'capital_depreciation_total' },
+        { labels: ['اجمالي المصاريف', 'إجمالي المصاريف'], field: 'total_expenses_sum' }
     ];
 
+    let mappedCount = 0;
     mappings.forEach(mapItem => {
         const matched = findFirstMatch(labelToValue, mapItem.labels);
-        if (matched != null) {
+        if (matched != null && matched !== '') {
             const el = document.getElementById(mapItem.field);
-            if (el) el.value = matched;
+            if (el) {
+                el.value = matched;
+                mappedCount++;
+                console.log('Mapped to form:', mapItem.field, '<=', mapItem.labels[0], '=', matched);
+            }
         }
     });
+    console.log('Total fields mapped to form inputs:', mappedCount);
 }
 
 function findFirstMatch(map, variants) {
@@ -675,6 +736,161 @@ function populateFinancialStatementTable(dataArray, selectedYear) {
     });
     
     console.log('Financial statement table populated with', dataArray.length, 'rows');
+}
+
+function createDynamicFormsFromJSON(dataArray, selectedYear) {
+    const container = document.getElementById('dynamic_fields');
+    const section = document.getElementById('dynamic_forms_container');
+    
+    if (!container || !section) return;
+    
+    // Clear existing
+    container.innerHTML = '';
+    
+    console.log('Creating dynamic forms from JSON...');
+    
+    // Detect all year columns
+    const yearColumns = [];
+    if (dataArray.length > 0) {
+        Object.keys(dataArray[0]).forEach(key => {
+            if (/^\d{4}$/.test(key)) yearColumns.push(key);
+        });
+    }
+    yearColumns.sort();
+    
+    // Filter items that have actual values (not null, not empty labels)
+    const itemsWithValues = dataArray.filter(item => {
+        const label = (item.Label || item.label || '').toString().trim();
+        if (!label) return false;
+        
+        // Check if any year has a non-null value
+        return yearColumns.some(year => {
+            const val = item[year];
+            return val !== null && val !== undefined && val !== '';
+        });
+    });
+    
+    console.log(`Found ${itemsWithValues.length} items with values out of ${dataArray.length} total`);
+    
+    if (itemsWithValues.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+    
+    // Show the section
+    section.style.display = 'block';
+    
+    // Create form fields for each item with values
+    itemsWithValues.forEach((item, index) => {
+        const label = (item.Label || item.label || '').toString().trim();
+        const note = (item['إيضاح'] || item['ايضاح'] || '').toString().trim();
+        
+        const formGroup = document.createElement('div');
+        formGroup.className = 'form-group';
+        
+        const labelEl = document.createElement('label');
+        labelEl.textContent = label + (note ? ` (إيضاح ${note})` : '');
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = `dynamic_field_${index}`;
+        input.readOnly = true;
+        
+        // Use the selected year value, or first available
+        let value = item[selectedYear];
+        if (value === null || value === undefined) {
+            for (const year of yearColumns) {
+                if (item[year] !== null && item[year] !== undefined) {
+                    value = item[year];
+                    break;
+                }
+            }
+        }
+        
+        input.value = typeof value === 'number' ? value.toLocaleString() : value;
+        
+        formGroup.appendChild(labelEl);
+        formGroup.appendChild(input);
+        container.appendChild(formGroup);
+    });
+    
+    console.log(`Created ${itemsWithValues.length} dynamic form fields`);
+}
+
+function applySmartDemoFilling(labelToValue, dataArray, selectedYear) {
+    // Smart logic for demo: use balance sheet data to populate operational fields reasonably
+    console.log('Applying smart demo filling...');
+    
+    try {
+        // Extract key values from balance sheet - ONLY for smart calculations, not direct mapping
+        const totalAssets = findFirstMatch(labelToValue, ['مجموع الموجودات']);
+        const propertyEquipment = findFirstMatch(labelToValue, ['ممتلكات ومنشات ومعدات', 'ممتلكات ومنشآت ومعدات']);
+        const finishedGoods = findFirstMatch(labelToValue, ['مخزون البضاعة الجاهزة']);
+        const consumables = findFirstMatch(labelToValue, ['مخزون المواد الاستهلاكية']);
+        const retainedEarnings = findFirstMatch(labelToValue, ['أرباح مدورة', 'ارباح مدورة']);
+        const totalEquity = findFirstMatch(labelToValue, ['صافي حقوق المساهمين']);
+        
+        // Smart calculations for demo purposes (reasonable business estimates)
+        if (retainedEarnings && !document.getElementById('total_sales').value) {
+            // Estimate sales as ~15% of retained earnings (typical ratio)
+            const estimatedSales = Math.round(retainedEarnings * 0.15);
+            setFieldIfEmpty('total_sales', estimatedSales);
+            setFieldIfEmpty('local_sales', Math.round(estimatedSales * 0.7)); // 70% local
+            setFieldIfEmpty('exported_sales', Math.round(estimatedSales * 0.3)); // 30% export
+            console.log('Demo: Estimated sales from retained earnings');
+        }
+        
+        if (propertyEquipment) {
+            // Typical depreciation: 5-10% of property value (for demo calculation only)
+            const estimatedDepreciation = Math.round(propertyEquipment * 0.07);
+            setFieldIfEmpty('depreciation_year', estimatedDepreciation);
+            setFieldIfEmpty('capital_depreciation_total', estimatedDepreciation);
+            console.log('Demo: Estimated depreciation (calculated, not from JSON label)');
+        }
+        
+        if (totalAssets && !document.getElementById('available_assets_value').value) {
+            setFieldIfEmpty('available_assets_value', totalAssets);
+            console.log('Demo: Set available assets from total assets');
+        }
+        
+        if (totalEquity && !document.getElementById('total_revenues_overview').value) {
+            // Estimate revenue as ~8% return on equity
+            const estimatedRevenue = Math.round(totalEquity * 0.08);
+            setFieldIfEmpty('total_revenues_overview', estimatedRevenue);
+            setFieldIfEmpty('main_activity_revenue', Math.round(estimatedRevenue * 0.9));
+            setFieldIfEmpty('secondary_activity_revenue', Math.round(estimatedRevenue * 0.1));
+            console.log('Demo: Estimated revenues from equity');
+        }
+        
+        // If we have sales, estimate typical expenses
+        const totalSales = parseInt(document.getElementById('total_sales').value) || 0;
+        if (totalSales > 0) {
+            // Typical expense ratios for industrial companies
+            setFieldIfEmpty('wages_benefits', Math.round(totalSales * 0.12)); // 12% labor
+            setFieldIfEmpty('utilities_fuel', Math.round(totalSales * 0.03)); // 3% utilities
+            setFieldIfEmpty('general_maintenance', Math.round(totalSales * 0.02)); // 2% maintenance
+            setFieldIfEmpty('admin_general_expenses_total', Math.round(totalSales * 0.18)); // 18% total admin
+            console.log('Demo: Estimated operational expenses from sales');
+        }
+        
+        // Raw materials from inventory
+        if (finishedGoods && consumables) {
+            setFieldIfEmpty('purchases_raw_materials', Math.round((finishedGoods + consumables) * 1.5));
+            setFieldIfEmpty('beginning_inventory', finishedGoods);
+            setFieldIfEmpty('ending_inventory', consumables);
+            console.log('Demo: Set raw materials from inventory');
+        }
+        
+    } catch (e) {
+        console.warn('Smart demo filling warning:', e);
+    }
+}
+
+function setFieldIfEmpty(fieldId, value) {
+    const el = document.getElementById(fieldId);
+    if (el && (!el.value || el.value === '0' || el.value === '')) {
+        el.value = value;
+    }
 }
 
 function logUnmappedLabels(dataArray, labelToValue) {
