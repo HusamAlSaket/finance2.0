@@ -238,6 +238,26 @@
                 </table>
             </div>
         </section>
+
+        <!-- قائمة المركز المالي (Financial Statement from JSON) -->
+        <section class="form-section">
+            <h2 class="section-title">قائمة المركز المالي</h2>
+            <div class="table-responsive">
+                <table class="data-table" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th style="width:50%;">البند</th>
+                            <th style="width:15%;">إيضاح</th>
+                            <th style="width:17.5%;">2023</th>
+                            <th style="width:17.5%;">2024</th>
+                        </tr>
+                    </thead>
+                    <tbody id="financial_statement_table">
+                        <!-- JSON data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
         
         <!-- معلومات الإنتاج -->
         <section class="form-section">
@@ -275,6 +295,107 @@
             </div>
         </section>
         
+        <!-- القطاع وتفاصيل الميزانية -->
+        <section class="form-section">
+            <h2 class="section-title">القطاع وتفاصيل الميزانية</h2>
+
+            <!-- الإيرادات -->
+            <div class="form-grid-2" style="margin-bottom: 15px;">
+                <div class="form-group">
+                    <label>اجمالي ايراد النشاط الرئيسي</label>
+                    <input type="number" id="main_activity_revenue" value="0">
+                </div>
+                <div class="form-group">
+                    <label>اجمالي ايراد النشاط الثانوي</label>
+                    <input type="number" id="secondary_activity_revenue" value="0">
+                </div>
+                <div class="form-group">
+                    <label>مجموع الايرادات</label>
+                    <input type="number" id="total_revenues_overview" value="0">
+                </div>
+            </div>
+
+            <!-- مصاريف ادارية وعمومية -->
+            <h3 class="section-title" style="border:0;margin-top:10px;">مصاريف إدارية وعمومية</h3>
+            <div class="form-grid-2">
+                <div class="form-group"><label>اجور و رواتب /ومنافعها</label><input type="number" id="wages_benefits" value="0"></div>
+                <div class="form-group"><label>مساهمة المنشأة في الضمان اجتماعي</label><input type="number" id="social_security_contribution" value="0"></div>
+
+                <div class="form-group"><label>مزايا أخرى للموظفين</label><input type="number" id="other_employee_benefits" value="0"></div>
+                <div class="form-group"><label>قرطاسية ومطبوعات ولوازم</label><input type="number" id="stationery_supplies" value="0"></div>
+
+                <div class="form-group"><label>كهرباء ومياه ومحروقات</label><input type="number" id="utilities_fuel" value="0"></div>
+                <div class="form-group"><label>نفقات السيارات</label><input type="number" id="car_expenses" value="0"></div>
+
+                <div class="form-group"><label>محروقات للتدفئة</label><input type="number" id="heating_fuel" value="0"></div>
+                <div class="form-group"><label>نظافة / وضيافة</label><input type="number" id="cleaning_hospitality" value="0"></div>
+
+                <div class="form-group"><label>اتصالات وانترنت وبريد</label><input type="number" id="communications" value="0"></div>
+                <div class="form-group"><label>ايجارات ابنية</label><input type="number" id="building_rent" value="0"></div>
+
+                <div class="form-group"><label>رسوم ورخص / و رسوم حكوميه/ واشتركات</label><input type="number" id="fees_licenses_subscriptions" value="0"></div>
+                <div class="form-group"><label>تصاريح عمال</label><input type="number" id="worker_permits" value="0"></div>
+
+                <div class="form-group"><label>استئجار سيارات والات</label><input type="number" id="vehicle_equipment_rental" value="0"></div>
+                <div class="form-group"><label>صيانه عامه</label><input type="number" id="general_maintenance" value="0"></div>
+
+                <div class="form-group"><label>نفقات صحية</label><input type="number" id="health_expenses" value="0"></div>
+                <div class="form-group"><label>مصاريف حاسوب/ تشمل خدمات استشارات للكمبيوتر والبرامج</label><input type="number" id="computer_expenses_consulting" value="0"></div>
+
+                <div class="form-group"><label>عمولات بنكيه</label><input type="number" id="bank_commissions" value="0"></div>
+                <div class="form-group"><label>اتعاب مهنيه /قد تشمل استشارات وتدقيق حسابات</label><input type="number" id="professional_fees_audit" value="0"></div>
+
+                <div class="form-group"><label>مصاريف سفر وتنقلات</label><input type="number" id="travel_expenses" value="0"></div>
+                <div class="form-group"><label>مصاريف تدريب</label><input type="number" id="training_expenses" value="0"></div>
+
+                <div class="form-group"><label>مصاريف تمويل</label><input type="number" id="financing_expenses" value="0"></div>
+                <div class="form-group"><label>تبرعات ومنح</label><input type="number" id="donations_grants" value="0"></div>
+
+                <div class="form-group"><label>فرق عملات</label><input type="number" id="currency_diff" value="0"></div>
+                <div class="form-group"><label>غرامات</label><input type="number" id="fines" value="0"></div>
+
+                <div class="form-group"><label>اقساط تامين مدفوعه</label><input type="number" id="insurance_premiums_paid" value="0"></div>
+                <div class="form-group"><label>طوابع</label><input type="number" id="stamps" value="0"></div>
+
+                <div class="form-group"><label>مسقفات</label><input type="number" id="property_taxes" value="0"></div>
+                <div class="form-group"><label>نفقات أخرى</label><input type="number" id="other_expenses_misc" value="0"></div>
+
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>الإجمالي الكلي</label>
+                    <input type="number" id="admin_general_expenses_total" value="0">
+                </div>
+            </div>
+
+            <!-- مواد أولية -->
+            <h3 class="section-title" style="border:0;margin-top:10px;">مواد أولية</h3>
+            <div class="form-grid-2">
+                <div class="form-group"><label>مشتريات مواد اولية</label><input type="number" id="purchases_raw_materials" value="0"></div>
+                <div class="form-group"><label>مخزون بداية العام</label><input type="number" id="beginning_inventory" value="0"></div>
+                <div class="form-group"><label>مخزون نهاية العام</label><input type="number" id="ending_inventory" value="0"></div>
+                <div class="form-group"><label>المستخدم بالانتاج والمواد الاولية</label><input type="number" id="used_in_production" value="0"></div>
+            </div>
+
+            <!-- النفقات الأخرى -->
+            <h3 class="section-title" style="border:0;margin-top:10px;">النفقات الأخرى</h3>
+            <div class="form-grid-2">
+                <div class="form-group"><label>فوائد بنوك مدفوعة</label><input type="number" id="bank_interest_paid" value="0"></div>
+                <div class="form-group"><label>تبرعات وتحويلات للغير</label><input type="number" id="donations_transfers" value="0"></div>
+                <div class="form-group"><label>ارباح أسهم مدفوعة</label><input type="number" id="dividends_paid" value="0"></div>
+                <div class="form-group"><label>المجموع</label><input type="number" id="other_section_total" value="0"></div>
+            </div>
+
+            <!-- المجموع الكلي -->
+            <h3 class="section-title" style="border:0;margin-top:10px;">المجموع الكلي</h3>
+            <div class="form-grid-2">
+                <div class="form-group"><label>مجموع الايرادات</label><input type="number" id="total_revenues_sum" value="0"></div>
+                <div class="form-group"><label>مجموع المصاريف الادارية والعمومية</label><input type="number" id="admin_general_expenses_sum" value="0"></div>
+                <div class="form-group"><label>مجموع المواد الاولية</label><input type="number" id="raw_materials_sum" value="0"></div>
+                <div class="form-group"><label>مجموع النفقات الأخرى</label><input type="number" id="other_expenses_sum" value="0"></div>
+                <div class="form-group"><label>اهتلاك راس المال</label><input type="number" id="capital_depreciation_total" value="0"></div>
+                <div class="form-group"><label>اجمالي المصاريف</label><input type="number" id="total_expenses_sum" value="0"></div>
+            </div>
+        </section>
+
         <!-- Contact Information Footer -->
         <div class="contact-info">
             <p>تم تطوير بوابة الخدمات الالكترونية الخاصة بادخال ميزانيات الشركات بواسط</p>
@@ -288,6 +409,8 @@
         
         <!-- Action Buttons -->
         <div class="action-buttons">
+            <input type="file" id="jsonUpload" accept="application/json" style="margin-inline-end: 10px;">
+            <button class="btn-save" type="button" id="importJsonBtn">استيراد JSON</button>
             <button class="btn-save" type="button" id="saveBtn">حفظ البيانات</button>
             <button class="btn-clear" type="button" id="clearBtn">تفريغ الحقول</button>
         </div>
