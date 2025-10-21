@@ -160,12 +160,83 @@
             <input type="file" id="jsonUpload" accept="application/json" style="margin-inline-end: 10px;">
             <button class="btn-save" type="button" id="importJsonBtn">استيراد JSON</button>
             <button class="btn-save" type="button" id="saveBtn">حفظ البيانات</button>
+            <button class="btn-export" type="button" id="exportCsvBtn" style="background-color: #FF9800; color: white; padding: 15px 60px; border: none; border-radius: 5px; font-size: 16px; font-weight: 600; cursor: pointer; min-width: 200px;" onclick="exportToCSV();">تصدير إلى CSV</button>
             <button class="btn-clear" type="button" id="clearBtn">تفريغ الحقول</button>
         </div>
     </div>
     
     <script src="api-mock.js"></script>
     <script src="script.js"></script>
+    <script>
+    // Ensure global wrapper exists even if bundlers/scopes interfere
+    window.__exportCsvFallback = function() {
+        try {
+            if (typeof window.exportToCSV === 'function') {
+                return window.exportToCSV();
+            }
+            // Minimal fallback: collect visible inputs and labels
+            const rows = [];
+            rows.push('نوع البيانات,الحقل,القيمة');
+            // Company info
+            const companyMap = [
+                ['معلومات الشركة','الرقم الوطني للمنشأة','national_number'],
+                ['معلومات الشركة','اسم الشركة','company_name'],
+                ['معلومات الشركة','الاسم التجاري للشركة','trade_name'],
+                ['معلومات الشركة','موقع الشركة','company_location'],
+                ['معلومات الشركة','مجال العمل','work_field'],
+                ['معلومات الشركة','حالة الشركة','company_status'],
+                ['معلومات الشركة','تاريخ التسجيل','registration_date'],
+                ['معلومات الشركة','رأس المال','capital'],
+                ['معلومات الشركة','توضيح القطاع','sector_description']
+            ];
+            companyMap.forEach(([type,label,id])=>{
+                const el=document.getElementById(id);
+                if(el){
+                    rows.push(type+','+label+','+(el.value||''));
+                }
+            });
+            // Sector info
+            const sectorMap = [
+                ['القطاع والسنة المالية','القسم الرئيسي','main_section'],
+                ['القطاع والسنة المالية','التصنيف','classification'],
+                ['القطاع والسنة المالية','سنة الميزانية','year_selector']
+            ];
+            sectorMap.forEach(([type,label,id])=>{
+                const el=document.getElementById(id);
+                if(el){
+                    rows.push(type+','+label+','+(el.value||''));
+                }
+            });
+            // Dynamic data
+            document.querySelectorAll('#dynamic_fields .form-group').forEach(group=>{
+                const labelEl=group.querySelector('label');
+                const inputEl=group.querySelector('input');
+                if(labelEl&&inputEl){
+                    rows.push('البيانات المالية,'+labelEl.textContent.replace(/,/g,'،')+','+(inputEl.value||''));
+                }
+            });
+            const BOM='\uFEFF';
+            const blob=new Blob([BOM+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+            const a=document.createElement('a');
+            a.href=URL.createObjectURL(blob);
+            const d=new Date();
+            const name='تصدير_بيانات_'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'.csv';
+            a.download=name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+        } catch(err){
+            console.error('CSV fallback export failed:', err);
+            alert('تعذر التصدير.');
+        }
+    };
+    // Bind button safely
+    (function(){
+        var btn=document.getElementById('exportCsvBtn');
+        if(btn){ btn.onclick=function(){ window.__exportCsvFallback(); }; }
+    })();
+    </script>
 </body>
 </html>
 

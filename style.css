@@ -338,7 +338,8 @@ body {
 }
 
 .btn-save,
-.btn-clear {
+.btn-clear,
+.btn-export {
     padding: 15px 60px;
     border: none;
     border-radius: 5px;
@@ -367,6 +368,17 @@ body {
 
 .btn-clear:hover {
     background-color: #da190b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.btn-export {
+    background-color: #FF9800;
+    color: white;
+}
+
+.btn-export:hover {
+    background-color: #F57C00;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
@@ -417,7 +429,8 @@ body {
     }
     
     .btn-save,
-    .btn-clear {
+    .btn-clear,
+    .btn-export {
         width: 100%;
     }
     

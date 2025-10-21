@@ -7,6 +7,7 @@ let availableYears = [];
 
 // Load data from localStorage on page load
 window.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded event fired');
     loadSavedJSON(); // Load previously imported JSON if exists
     
     // Wire JSON import button
@@ -20,11 +21,40 @@ window.addEventListener('DOMContentLoaded', () => {
     if (yearSelector) {
         yearSelector.addEventListener('change', handleYearChange);
     }
+    
+    console.log('About to set up CSV export button...');
+    // Wire CSV export button
+    console.log('Looking for CSV export button...');
+    const exportBtn = document.getElementById('exportCsvBtn');
+    console.log('Button element:', exportBtn);
+    if (exportBtn) {
+        console.log('CSV Export button found and event listener added');
+        exportBtn.addEventListener('click', () => {
+            console.log('CSV Export button clicked!');
+            alert('CSV Export clicked - starting export...');
+            exportToCSV();
+        });
+    } else {
+        console.error('CSV Export button not found!');
+        // Let's try to find all buttons
+        const allButtons = document.querySelectorAll('button');
+        console.log('All buttons found:', allButtons);
+        allButtons.forEach((btn, index) => {
+            console.log(`Button ${index}: id="${btn.id}", text="${btn.textContent}"`);
+        });
+    }
 });
 
 // Save button functionality
 document.getElementById('saveBtn').addEventListener('click', () => {
     showToast('تم حفظ البيانات بنجاح', 'success');
+});
+
+// CSV Export button functionality
+document.getElementById('exportCsvBtn').addEventListener('click', () => {
+    console.log('CSV Export button clicked!');
+    alert('CSV Export clicked - starting export...');
+    exportToCSV();
 });
 
 // Clear button functionality
@@ -34,6 +64,7 @@ document.getElementById('clearBtn').addEventListener('click', () => {
         showToast('تم تفريغ جميع الحقول ومسح البيانات', 'success');
     }
 });
+
 
 // Clear all data
 function clearAllData() {
@@ -280,3 +311,160 @@ function createDynamicFormsFromJSON(dataArray, selectedYear) {
     
     console.log(`Created ${itemsWithValues.length} dynamic form fields`);
 }
+
+// ===== CSV Export Functions =====
+
+// Function to collect all form data - make it globally accessible
+window.collectAllFormData = function() {
+    const formData = {
+        companyInfo: {},
+        sectorInfo: {},
+        financialData: []
+    };
+
+    // Collect company information
+    const companyFields = [
+        'national_number', 'company_name', 'trade_name', 'company_location',
+        'work_field', 'company_status', 'registration_date', 'capital', 'sector_description'
+    ];
+    
+    companyFields.forEach(fieldId => {
+        const element = document.getElementById(fieldId);
+        if (element) {
+            formData.companyInfo[fieldId] = element.value || '';
+        }
+    });
+
+    // Collect sector information
+    const sectorFields = ['main_section', 'classification', 'year_selector'];
+    sectorFields.forEach(fieldId => {
+        const element = document.getElementById(fieldId);
+        if (element) {
+            formData.sectorInfo[fieldId] = element.value || '';
+        }
+    });
+
+    // Collect dynamic financial data
+    const dynamicFields = document.querySelectorAll('#dynamic_fields .form-group');
+    dynamicFields.forEach((fieldGroup, index) => {
+        const label = fieldGroup.querySelector('label');
+        const input = fieldGroup.querySelector('input');
+        
+        if (label && input) {
+            formData.financialData.push({
+                label: label.textContent.trim(),
+                value: input.value || '',
+                fieldId: input.id
+            });
+        }
+    });
+
+    return formData;
+}
+
+// Function to escape CSV values - make it globally accessible
+window.escapeCSVValue = function(value) {
+    if (value === null || value === undefined) return '';
+    
+    const stringValue = String(value);
+    
+    // If the value contains comma, newline, or double quote, wrap in quotes and escape quotes
+    if (stringValue.includes(',') || stringValue.includes('\n') || stringValue.includes('"')) {
+        return '"' + stringValue.replace(/"/g, '""') + '"';
+    }
+    
+    return stringValue;
+}
+
+// Function to generate CSV content - make it globally accessible
+window.generateCSVContent = function(formData) {
+    const csvRows = [];
+    
+    // Add header row
+    csvRows.push('نوع البيانات,الحقل,القيمة');
+    
+    // Add company information
+    csvRows.push('معلومات الشركة,الرقم الوطني للمنشأة,' + escapeCSVValue(formData.companyInfo.national_number));
+    csvRows.push('معلومات الشركة,اسم الشركة,' + escapeCSVValue(formData.companyInfo.company_name));
+    csvRows.push('معلومات الشركة,الاسم التجاري للشركة,' + escapeCSVValue(formData.companyInfo.trade_name));
+    csvRows.push('معلومات الشركة,موقع الشركة,' + escapeCSVValue(formData.companyInfo.company_location));
+    csvRows.push('معلومات الشركة,مجال العمل,' + escapeCSVValue(formData.companyInfo.work_field));
+    csvRows.push('معلومات الشركة,حالة الشركة,' + escapeCSVValue(formData.companyInfo.company_status));
+    csvRows.push('معلومات الشركة,تاريخ التسجيل,' + escapeCSVValue(formData.companyInfo.registration_date));
+    csvRows.push('معلومات الشركة,رأس المال,' + escapeCSVValue(formData.companyInfo.capital));
+    csvRows.push('معلومات الشركة,توضيح القطاع,' + escapeCSVValue(formData.companyInfo.sector_description));
+    
+    // Add sector information
+    csvRows.push('القطاع والسنة المالية,القسم الرئيسي,' + escapeCSVValue(formData.sectorInfo.main_section));
+    csvRows.push('القطاع والسنة المالية,التصنيف,' + escapeCSVValue(formData.sectorInfo.classification));
+    csvRows.push('القطاع والسنة المالية,سنة الميزانية,' + escapeCSVValue(formData.sectorInfo.year_selector));
+    
+    // Add financial data
+    formData.financialData.forEach(item => {
+        csvRows.push('البيانات المالية,' + escapeCSVValue(item.label) + ',' + escapeCSVValue(item.value));
+    });
+    
+    return csvRows.join('\n');
+}
+
+// Function to download CSV file - make it globally accessible
+window.downloadCSV = function(csvContent, filename) {
+    // Create BOM for UTF-8 to ensure proper Arabic text display in Excel
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Create download link
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up the URL object
+    URL.revokeObjectURL(url);
+}
+
+// Main CSV export function - make it globally accessible
+window.exportToCSV = function() {
+    console.log('exportToCSV function called');
+    try {
+        // Check if there's any data to export
+        const formData = collectAllFormData();
+        console.log('Form data collected:', formData);
+        
+        // Check if we have any meaningful data
+        const hasCompanyData = Object.values(formData.companyInfo).some(value => value.trim() !== '');
+        const hasSectorData = Object.values(formData.sectorInfo).some(value => value.trim() !== '');
+        const hasFinancialData = formData.financialData.length > 0;
+        
+        if (!hasCompanyData && !hasSectorData && !hasFinancialData) {
+            showToast('لا توجد بيانات للتصدير. يرجى ملء بعض الحقول أولاً', 'error');
+            return;
+        }
+        
+        // Generate CSV content
+        const csvContent = generateCSVContent(formData);
+        
+        // Create filename with current date
+        const now = new Date();
+        const dateStr = now.getFullYear() + '-' + 
+                       String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                       String(now.getDate()).padStart(2, '0');
+        const filename = `ميزانيات_شركات_القطاع_الصناعي_${dateStr}.csv`;
+        
+        // Download the file
+        downloadCSV(csvContent, filename);
+        
+        showToast('تم تصدير البيانات إلى ملف CSV بنجاح', 'success');
+        
+    } catch (error) {
+        console.error('CSV export error:', error);
+        showToast('حدث خطأ أثناء تصدير البيانات', 'error');
+    }
+}
+
