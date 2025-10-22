@@ -161,7 +161,7 @@
             <label for="jsonUpload" class="btn-file">اختيار ملف JSON</label>
             <button class="btn-save" type="button" id="importJsonBtn">استيراد JSON</button>
             <button class="btn-save" type="button" id="saveBtn">حفظ البيانات</button>
-            <button class="btn-export" type="button" id="exportCsvBtn" onclick="exportToCSV();">تصدير إلى CSV</button>
+            <button class="btn-export" type="button" id="exportCsvBtn">تصدير إلى CSV</button>
             <button class="btn-clear" type="button" id="clearBtn">تفريغ الحقول</button>
         </div>
     </div>
@@ -232,10 +232,12 @@
             alert('تعذر التصدير.');
         }
     };
-    // Bind button safely
+    // Bind button safely (single source of truth)
     (function(){
         var btn=document.getElementById('exportCsvBtn');
-        if(btn){ btn.onclick=function(){ window.__exportCsvFallback(); }; }
+        if(btn){
+            btn.addEventListener('click', function(){ window.__exportCsvFallback(); }, { once: false });
+        }
     })();
     </script>
 </body>

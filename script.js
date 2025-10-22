@@ -22,27 +22,7 @@ window.addEventListener('DOMContentLoaded', () => {
         yearSelector.addEventListener('change', handleYearChange);
     }
     
-    console.log('About to set up CSV export button...');
-    // Wire CSV export button
-    console.log('Looking for CSV export button...');
-    const exportBtn = document.getElementById('exportCsvBtn');
-    console.log('Button element:', exportBtn);
-    if (exportBtn) {
-        console.log('CSV Export button found and event listener added');
-        exportBtn.addEventListener('click', () => {
-            console.log('CSV Export button clicked!');
-            alert('CSV Export clicked - starting export...');
-            exportToCSV();
-        });
-    } else {
-        console.error('CSV Export button not found!');
-        // Let's try to find all buttons
-        const allButtons = document.querySelectorAll('button');
-        console.log('All buttons found:', allButtons);
-        allButtons.forEach((btn, index) => {
-            console.log(`Button ${index}: id="${btn.id}", text="${btn.textContent}"`);
-        });
-    }
+    // CSV export button is bound in HTML fallback script; avoid duplicate listeners
 });
 
 // Save button functionality
@@ -50,12 +30,7 @@ document.getElementById('saveBtn').addEventListener('click', () => {
     showToast('تم حفظ البيانات بنجاح', 'success');
 });
 
-// CSV Export button functionality
-document.getElementById('exportCsvBtn').addEventListener('click', () => {
-    console.log('CSV Export button clicked!');
-    alert('CSV Export clicked - starting export...');
-    exportToCSV();
-});
+// CSV export listener is handled elsewhere to prevent duplicate downloads
 
 // Clear button functionality
 document.getElementById('clearBtn').addEventListener('click', () => {
