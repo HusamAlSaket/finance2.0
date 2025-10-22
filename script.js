@@ -117,27 +117,33 @@ async function handleImportJsonClick() {
         availableYears = detectAllYears(dataArray);
         console.log('Available years:', availableYears);
 
-        if (availableYears.length === 0) {
-            showToast('لم يتم العثور على أعمدة السنوات في البيانات', 'error');
-            return;
-        }
-
-        // Populate year selector dropdown
+        // Populate year selector dropdown (handles empty case internally)
         populateYearSelector(availableYears);
 
-        // Use the most recent year as default
-        const selectedYear = availableYears[availableYears.length - 1];
-        document.getElementById('year_selector').value = selectedYear;
+        let selectedYear = '';
+        if (availableYears.length > 0) {
+            // Use the most recent year as default
+            selectedYear = availableYears[availableYears.length - 1];
+            document.getElementById('year_selector').value = selectedYear;
+            console.log('Selected year:', selectedYear);
+        } else {
+            // No year columns present
+            const yearSelector = document.getElementById('year_selector');
+            if (yearSelector) yearSelector.disabled = true;
+            console.log('No year columns found in JSON. Proceeding without year filter.');
+        }
 
         console.log('Total JSON entries:', dataArray.length);
-        console.log('Selected year:', selectedYear);
 
-        // Create dynamic form fields ONLY from JSON data that has values
+        // Populate fixed fields (company/sector) when JSON is structured by Arabic keys
+        populateStaticFieldsFromStructuredJson(dataArray);
+
+        // Create dynamic form fields from JSON (works with or without years)
         createDynamicFormsFromJSON(dataArray, selectedYear);
 
         // Save the JSON data itself to localStorage for reload
         localStorage.setItem(STORAGE_KEY + '_json', JSON.stringify(dataArray));
-        localStorage.setItem(STORAGE_KEY + '_year', selectedYear);
+        if (selectedYear) localStorage.setItem(STORAGE_KEY + '_year', selectedYear);
         
         showToast('تم استيراد JSON وتعبئة الحقول بنجاح', 'success');
     } catch (e) {
@@ -175,6 +181,53 @@ function detectAllYears(dataArray) {
     return Array.from(years).sort(); // Return sorted array
 }
 
+// Populate known fixed fields when JSON is structured with Arabic keys
+function populateStaticFieldsFromStructuredJson(dataArray) {
+    try {
+        if (!Array.isArray(dataArray)) return;
+        const byField = new Map();
+        dataArray.forEach(item => {
+            const type = item['نوع البيانات'];
+            const field = item['الحقل'];
+            const value = item['القيمة'];
+            if (type && field) byField.set(field.trim(), value);
+        });
+
+        const map = [
+            ['الرقم الوطني للمنشأة','national_number'],
+            ['اسم الشركة','company_name'],
+            ['الاسم التجاري للشركة','trade_name'],
+            ['موقع الشركة','company_location'],
+            ['مجال العمل','work_field'],
+            ['حالة الشركة','company_status'],
+            ['تاريخ التسجيل','registration_date'],
+            ['رأس المال','capital'],
+            ['توضيح القطاع','sector_description'],
+            ['القسم الرئيسي','main_section'],
+            ['التصنيف','classification'],
+            ['سنة الميزانية','year_selector']
+        ];
+        map.forEach(([label, id]) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (id === 'main_section' || id === 'classification' || id === 'year_selector') {
+                const val = byField.get(label);
+                if (el.tagName === 'SELECT') {
+                    // Try to set value directly if present as option text or value
+                    const option = Array.from(el.options).find(o => o.value === val || o.textContent === val || o.textContent.includes(val || ''));
+                    if (option) el.value = option.value; else el.value = '';
+                } else {
+                    el.value = val || '';
+                }
+            } else {
+                el.value = byField.get(label) || '';
+            }
+        });
+    } catch (e) {
+        console.warn('populateStaticFieldsFromStructuredJson failed:', e);
+    }
+}
+
 // Populate year selector dropdown
 function populateYearSelector(years) {
     const yearSelector = document.getElementById('year_selector');
@@ -183,16 +236,20 @@ function populateYearSelector(years) {
     // Clear existing options except the first one
     yearSelector.innerHTML = '<option value="">-- اختر السنة --</option>';
     
-    // Add year options
-    years.forEach(year => {
-        const option = document.createElement('option');
-        option.value = year;
-        option.textContent = `سنة ${year}`;
-        yearSelector.appendChild(option);
-    });
-    
-    // Enable the selector
-    yearSelector.disabled = false;
+    if (years && years.length > 0) {
+        // Add year options
+        years.forEach(year => {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = `سنة ${year}`;
+            yearSelector.appendChild(option);
+        });
+        // Enable the selector
+        yearSelector.disabled = false;
+    } else {
+        // No years available
+        yearSelector.disabled = true;
+    }
 }
 
 
@@ -225,7 +282,16 @@ function loadSavedJSON() {
                 console.log('Available years:', availableYears);
                 console.log('Selected year:', year);
                 
+                // Populate fixed fields (company/sector) if present
+                populateStaticFieldsFromStructuredJson(dataArray);
+
                 createDynamicFormsFromJSON(dataArray, year);
+            } else {
+                // No years case: still populate fields and dynamic values
+                const yearSelector = document.getElementById('year_selector');
+                if (yearSelector) yearSelector.disabled = true;
+                populateStaticFieldsFromStructuredJson(dataArray);
+                createDynamicFormsFromJSON(dataArray, '');
             }
         }
     } catch (e) {
@@ -256,9 +322,17 @@ function createDynamicFormsFromJSON(dataArray, selectedYear) {
     // Filter items that have actual values (not null, not empty labels)
     const itemsWithValues = dataArray.filter(item => {
         const label = (item.Label || item.label || '').toString().trim();
-        if (!label) return false;
+        // Support Arabic key 'الحقل'
+        const arabicField = (item['الحقل'] || '').toString().trim();
+        const effectiveLabel = label || arabicField;
+        if (!effectiveLabel) return false;
         
-        // Check if any year has a non-null value
+        if (yearColumns.length === 0) {
+            // No years: accept items with a generic value field or non-empty value
+            const genericVal = item.Value ?? item.value ?? item.amount ?? item.total ?? item['قيمة'] ?? item['القيمة'];
+            return genericVal !== null && genericVal !== undefined && genericVal !== '';
+        }
+        // With years: check any year has a non-null value
         return yearColumns.some(year => {
             const val = item[year];
             return val !== null && val !== undefined && val !== '';
@@ -277,7 +351,7 @@ function createDynamicFormsFromJSON(dataArray, selectedYear) {
     
     // Create form fields for each item with values
     itemsWithValues.forEach((item, index) => {
-        const label = (item.Label || item.label || '').toString().trim();
+        const label = (item.Label || item.label || item['الحقل'] || '').toString().trim();
         const note = (item['إيضاح'] || item['ايضاح'] || '').toString().trim();
         
         const formGroup = document.createElement('div');
@@ -291,18 +365,24 @@ function createDynamicFormsFromJSON(dataArray, selectedYear) {
         input.id = `dynamic_field_${index}`;
         input.readOnly = true;
         
-        // Use the selected year value, or first available
-        let value = item[selectedYear];
-        if (value === null || value === undefined) {
-            for (const year of yearColumns) {
-                if (item[year] !== null && item[year] !== undefined) {
-                    value = item[year];
-                    break;
+        let value;
+        if (yearColumns.length === 0) {
+            // No years: pick a generic value field
+            value = item.Value ?? item.value ?? item.amount ?? item.total ?? item['قيمة'] ?? item['القيمة'] ?? '';
+        } else {
+            // With years: use selected year, or first available
+            value = item[selectedYear];
+            if (value === null || value === undefined) {
+                for (const year of yearColumns) {
+                    if (item[year] !== null && item[year] !== undefined) {
+                        value = item[year];
+                        break;
+                    }
                 }
             }
         }
         
-        input.value = typeof value === 'number' ? value.toLocaleString() : value;
+        input.value = typeof value === 'number' ? value.toLocaleString() : (value ?? '');
         
         formGroup.appendChild(labelEl);
         formGroup.appendChild(input);
