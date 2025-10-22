@@ -326,17 +326,8 @@ function createDynamicFormsFromJSON(dataArray, selectedYear) {
         const arabicField = (item['الحقل'] || '').toString().trim();
         const effectiveLabel = label || arabicField;
         if (!effectiveLabel) return false;
-        
-        if (yearColumns.length === 0) {
-            // No years: accept items with a generic value field or non-empty value
-            const genericVal = item.Value ?? item.value ?? item.amount ?? item.total ?? item['قيمة'] ?? item['القيمة'];
-            return genericVal !== null && genericVal !== undefined && genericVal !== '';
-        }
-        // With years: check any year has a non-null value
-        return yearColumns.some(year => {
-            const val = item[year];
-            return val !== null && val !== undefined && val !== '';
-        });
+        // Always include the row when it has a label, even if value is null/empty
+        return true;
     });
     
     console.log(`Found ${itemsWithValues.length} items with values out of ${dataArray.length} total`);
@@ -382,7 +373,10 @@ function createDynamicFormsFromJSON(dataArray, selectedYear) {
             }
         }
         
-        input.value = typeof value === 'number' ? value.toLocaleString() : (value ?? '');
+        // Show explicit marker for missing values while keeping 0 and '0'
+        const isMissing = (value === null || value === undefined || (typeof value === 'string' && value.trim() === ''));
+        const displayValue = isMissing ? 'غير متوفر' : (typeof value === 'number' ? value.toLocaleString() : value);
+        input.value = displayValue;
         
         formGroup.appendChild(labelEl);
         formGroup.appendChild(input);
