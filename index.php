@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ادخال جديد / ميزانيات شركات القطاع الصناعي</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
     <div class="container">
@@ -157,10 +157,11 @@
         
         <!-- Action Buttons -->
         <div class="action-buttons">
-            <input type="file" id="jsonUpload" accept="application/json" style="margin-inline-end: 10px;">
+            <input type="file" id="jsonUpload" accept="application/json" class="visually-hidden">
+            <label for="jsonUpload" class="btn-file">اختيار ملف JSON</label>
             <button class="btn-save" type="button" id="importJsonBtn">استيراد JSON</button>
             <button class="btn-save" type="button" id="saveBtn">حفظ البيانات</button>
-            <button class="btn-export" type="button" id="exportCsvBtn" style="background-color: #FF9800; color: white; padding: 15px 60px; border: none; border-radius: 5px; font-size: 16px; font-weight: 600; cursor: pointer; min-width: 200px;" onclick="exportToCSV();">تصدير إلى CSV</button>
+            <button class="btn-export" type="button" id="exportCsvBtn" onclick="exportToCSV();">تصدير إلى CSV</button>
             <button class="btn-clear" type="button" id="clearBtn">تفريغ الحقول</button>
         </div>
     </div>
