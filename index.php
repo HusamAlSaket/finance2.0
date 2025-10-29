@@ -10,9 +10,9 @@
     <div class="container">
         <h1 class="main-title">ادخال جديد / ميزانيات شركات القطاع الصناعي</h1>
         
-        <!-- معلومات الشركة -->
+        <!-- معلومات الشركة
         <section class="form-section">
-            <h2 class="section-title">معلومات الشركة</h2>
+            <h2 class="section-title">معلومات الشركة</h2> -->
             
             <!-- Search Result Info Box -->
             <div id="searchResultBox" class="search-result-box" style="display: none;">
@@ -23,7 +23,7 @@
                 </div>
             </div>
             
-            <div class="form-grid">
+            <!-- <div class="form-grid">
                 <div class="form-group">
                     <label>الرقم الوطني للمنشأة</label>
                     <div class="input-with-button">
@@ -36,7 +36,7 @@
                     <label>اسم الشركة</label>
                     <input type="text" id="company_name" readonly>
                 </div>
-            </div>
+            </div> -->
             
             <!-- Search Results Table -->
             <div id="searchResults" class="search-results" style="display: none;">
@@ -101,10 +101,10 @@
                 </div>
             </div>
             
-            <button class="btn-balance" type="button">عرض الميزانية</button>
+            <!-- <button class="btn-balance" type="button">عرض الميزانية</button> -->
         </section>
         
-        <!-- القطاع والسنة المالية -->
+        <!-- القطاع والسنة المالية
         <section class="form-section">
             <h2 class="section-title">القطاع والسنة المالية</h2>
             <div class="form-grid">
@@ -130,7 +130,7 @@
                     </select>
                 </div>
             </div>
-        </section>
+        </section> -->
         
         <!-- Dynamic Forms Container - populated from JSON -->
         <section class="form-section" id="dynamic_forms_container" style="display:none;">

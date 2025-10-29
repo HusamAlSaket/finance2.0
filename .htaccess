@@ -1,11 +1,5 @@
+# Simple .htaccess for local WAMP development
 RewriteEngine On
-RewriteBase /
+RewriteBase /finance2.0/
 
-# Ensure this directory serves the finance project
-# No redirects - just serve the content
 DirectoryIndex index.php index.html
-
-# Optional: Add security headers
-Header always set X-Content-Type-Options nosniff
-Header always set X-Frame-Options DENY
-Header always set X-XSS-Protection "1; mode=block"
